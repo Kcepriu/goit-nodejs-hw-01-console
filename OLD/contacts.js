@@ -13,8 +13,6 @@ async function writeFile(contacts) {
   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 }
 
-// TODO: задокументувати кожну функцію
-
 async function listContacts() {
   const contacts = await readFile();
   return contacts;
@@ -26,6 +24,7 @@ async function getContactById(contactId) {
   return foundContact || null;
 }
 
+// TODO: задокументувати кожну функцію
 async function removeContact(contactId) {
   //Отут повертати масив видалених елементів
   //через splice

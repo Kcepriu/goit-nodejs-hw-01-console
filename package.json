@@ -2,10 +2,13 @@
   "name": "goit-nodejs-hw-01-console",
   "version": "1.0.0",
   "description": "goit-nodejs-hw-01-console",
-  "main": "index.js",
+  "main": "server.js",
+
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "cross-env NODE_ENV=production node ./server.js",
+    "start:dev": "cross-env NODE_ENV=development nodemon ./server.js",
+    "lint": "eslint **/*.js",
+    "lint:fix": "eslint --fix **/*.js"
   },
   "repository": {
     "type": "git",
@@ -18,12 +21,22 @@
   },
   "homepage": "https://github.com/Kcepriu/goit-nodejs-hw-01-console#readme",
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+     "eslint": "7.19.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "16.0.3",
+    "eslint-plugin-import": "2.25.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "5.2.0"
   },
   "dependencies": {
     "commander": "^10.0.0",
     "yargs": "^17.7.1",
-    "nanoid": "^3.3.6"
+    "nanoid": "^3.3.6",
+     "cors": "2.8.5",
+    "cross-env": "7.0.3",
+    "express": "4.17.1",
+    "morgan": "1.10.0"
     
   }
 }
