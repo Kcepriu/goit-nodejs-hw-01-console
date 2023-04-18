@@ -27,6 +27,8 @@ async function getContactById(contactId) {
 }
 
 async function removeContact(contactId) {
+  //Отут повертати масив видалених елементів
+  //через splice
   const contacts = await listContacts();
   const newContact = contacts.filter((contact) => contact.id !== contactId);
   await writeFile(newContact);
