@@ -6,87 +6,50 @@ const {
   updateContact,
 } = require("../models/contacts");
 
-const validationContact = require("../services/validationContact");
+const { RequestError, ctrlWrapper } = require("../helpers");
 
-const getContacts = async (req, res, next) => {
-  try {
-    const contacts = await listContacts();
-    res.json(contacts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+// const getContacts = async (req, res, next) => {
+const getContacts = async (req, res) => {
+  const contacts = await listContacts();
+  res.json(contacts);
 };
 
-const getOneContact = async (req, res, next) => {
-  try {
-    const contacts = await getContactById(req.params.contactId);
+const getOneContact = async (req, res) => {
+  const contact = await getContactById(req.params.contactId);
 
-    if (contacts) {
-      res.json(contacts);
-    } else {
-      res.status(404).json({ message: "Not found" });
-    }
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  if (!contact) {
+    throw RequestError(404, "Not found");
   }
+  res.json(contact);
 };
 
-const postContact = async (req, res, next) => {
-  // * Validation
-  const resultValidation = await validationContact(req.body);
-  if (resultValidation) {
-    res.status(400).json({ message: resultValidation });
-    return;
-  }
-
-  try {
-    const contacts = await addContact(req.body);
-    res.status(201).json(contacts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+const postContact = async (req, res) => {
+  const contacts = await addContact(req.body);
+  res.status(201).json(contacts);
 };
 
-const putContact = async (req, res, next) => {
-  // * Validation
-  const resultValidation = await validationContact(req.body);
-  if (resultValidation) {
-    res.status(400).json({ message: resultValidation });
-    return;
-  }
+const putContact = async (req, res) => {
+  const contact = await updateContact(req.params.contactId, req.body);
 
-  const contactId = req.params.contactId;
-  try {
-    const contacts = await updateContact(contactId, req.body);
-
-    if (contacts) {
-      res.json(contacts);
-    } else {
-      res.status(404).json({ message: "Not found" });
-    }
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  if (!contact) {
+    throw RequestError(404, "Not found");
   }
+  res.json(contact);
 };
 
-const deleteContact = async (req, res, next) => {
-  try {
-    const contacts = await removeContact(req.params.contactId);
+const deleteContact = async (req, res) => {
+  const contact = await removeContact(req.params.contactId);
 
-    if (contacts) {
-      res.json(contacts);
-    } else {
-      res.status(404).json({ message: "Not found" });
-    }
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  if (!contact) {
+    throw RequestError(404, "Not found");
   }
+  res.json(contact);
 };
 
 module.exports = {
-  getContacts,
-  getOneContact,
-  postContact,
-  putContact,
-  deleteContact,
+  getContacts: ctrlWrapper(getContacts),
+  getOneContact: ctrlWrapper(getOneContact),
+  postContact: ctrlWrapper(postContact),
+  putContact: ctrlWrapper(putContact),
+  deleteContact: ctrlWrapper(deleteContact),
 };
