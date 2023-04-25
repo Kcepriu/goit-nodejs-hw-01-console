@@ -4,13 +4,28 @@ const { RequestError, ctrlWrapper } = require("../helpers");
 
 // const getContacts = async (req, res, next) => {
 const getContacts = async (req, res) => {
-  const contacts = await Contact.find();
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 10, favorite = null } = req.query;
+
+  const skip = (page - 1) * limit;
+
+  // TODO Оце костиль, спитати як робиться правильно!!!
+  // Якщо буде декілька параметрві, то як робити?
+  const addFilter = favorite ? { favorite } : {};
+
+  const contacts = await Contact.find({ owner, ...addFilter }, null, {
+    skip,
+    limit,
+  }).populate("owner", "email subscription");
   res.json(contacts);
 };
 
 const getOneContact = async (req, res) => {
   // const contact = await Contact.findOne({ _id: req.params.contactId });
-  const contact = await Contact.findById(req.params.contactId);
+  const contact = await Contact.findById(req.params.contactId).populate(
+    "owner",
+    "email subscription"
+  );
 
   if (!contact) {
     throw RequestError(404, "Not found");
@@ -19,7 +34,9 @@ const getOneContact = async (req, res) => {
 };
 
 const postContact = async (req, res) => {
-  const contacts = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+
+  const contacts = await Contact.create({ ...req.body, owner });
   res.status(201).json(contacts);
 };
 
