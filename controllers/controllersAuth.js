@@ -38,6 +38,7 @@ const login = async (req, res, next) => {
 
   const token = await user.generateToken();
 
+  // res.json({ token, user: { email, subscription: user.subscription } });
   res.json({ token, user: { email, subscription: user.subscription } });
 };
 
