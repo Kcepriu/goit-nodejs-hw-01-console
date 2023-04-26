@@ -1,7 +1,13 @@
 const express = require("express");
 const ctrl = require("../controllers/controllersAuth");
 
-const { validateBody, authenticate } = require("../middlewapres");
+const {
+  validateBody,
+  authenticate,
+  upload,
+  resizeAvatar,
+  validateFile,
+} = require("../middlewapres");
 const { shemas } = require("../models/user");
 
 const router = express.Router();
@@ -24,6 +30,15 @@ router.patch(
   authenticate,
   validateBody(shemas.schemaChangeSubscriptionUser),
   ctrl.changeSubscription
+);
+
+router.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatar"),
+  validateFile(),
+  resizeAvatar,
+  ctrl.changeAvatar
 );
 
 module.exports = router;

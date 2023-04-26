@@ -1,6 +1,11 @@
+const gravatar = require("gravatar");
 const { User } = require("../models/user");
+const path = require("path");
+const fs = require("fs/promises");
 
 const { RequestError, ctrlWrapper } = require("../helpers");
+
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
 const register = async (req, res, next) => {
   // Якщо хочемо написати уеікальне повідомлення а не брати стандартне із монгуста, то перевіримо чи існує такий юзер
@@ -10,7 +15,9 @@ const register = async (req, res, next) => {
     throw RequestError(409, "Email already in use");
   }
 
-  const newUser = await User.create(req.body);
+  const avatarURL = gravatar.url(email);
+
+  const newUser = await User.create({ ...req.body, avatarURL });
   await newUser.setPassword(password);
   const token = await newUser.generateToken();
   res.status(201).json({ token: token });
@@ -53,10 +60,24 @@ const changeSubscription = async (req, res, next) => {
   res.json({ email: user.email, subscription: user.subscription });
 };
 
+const changeAvatar = async (req, res, next) => {
+  const { _id } = req.user;
+  const { path: tmpUpload, originalname } = req.file;
+  const filename = `${_id}_${originalname}`;
+
+  const resultUpload = path.join(avatarsDir, filename);
+  await fs.rename(tmpUpload, resultUpload);
+
+  const avatarURL = path.join("avatars", filename);
+  await User.findByIdAndUpdate(_id, { avatarURL });
+  res.json({ avatarURL });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   current: ctrlWrapper(current),
   logout: ctrlWrapper(logout),
   changeSubscription: ctrlWrapper(changeSubscription),
+  changeAvatar: ctrlWrapper(changeAvatar),
 };
