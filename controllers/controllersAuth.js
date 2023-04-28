@@ -17,6 +17,7 @@ const register = async (req, res, next) => {
 
   const avatarURL = gravatar.url(email);
 
+  //TODO HW-6 - Create tokken from verification email
   const newUser = await User.create({ ...req.body, avatarURL });
   await newUser.setPassword(password);
   const token = await newUser.generateToken();
