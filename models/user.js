@@ -59,7 +59,7 @@ userSchema.methods.isValidPassword = async function (password) {
 };
 
 // Use with  tokken
-userSchema.methods.generateToken = async function (password) {
+userSchema.methods.generateToken = async function () {
   this.token = jwt.sign({ id: this.id }, SECRET_KEY);
   await this.save();
   return this.token;
@@ -83,10 +83,15 @@ const schemaChangeSubscriptionUser = Joi.object({
     .required(),
 });
 
+const schemaSentValidationToken = Joi.object({
+  email: Joi.string().required(),
+});
+
 const shemas = {
   schemaRegisterUser,
   schemaLoginUser,
   schemaChangeSubscriptionUser,
+  schemaSentValidationToken,
 };
 
 const User = model("user", userSchema);

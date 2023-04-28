@@ -8,6 +8,7 @@ const {
   resizeAvatar,
   validateFile,
 } = require("../middlewapres");
+
 const { shemas } = require("../models/user");
 
 const router = express.Router();
@@ -40,5 +41,13 @@ router.patch(
   resizeAvatar,
   ctrl.changeAvatar
 );
+
+router.post(
+  "/verify",
+  validateBody(shemas.schemaSentValidationToken),
+  ctrl.sendValidationToken
+);
+
+router.get("/verify/:verificationToken", ctrl.verificationEmailToken);
 
 module.exports = router;

@@ -2,8 +2,9 @@ const gravatar = require("gravatar");
 const { User } = require("../models/user");
 const path = require("path");
 const fs = require("fs/promises");
+const { v4: uuidv4 } = require("uuid");
 
-const { RequestError, ctrlWrapper } = require("../helpers");
+const { RequestError, ctrlWrapper, emailFunction } = require("../helpers");
 
 const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
@@ -17,11 +18,19 @@ const register = async (req, res, next) => {
 
   const avatarURL = gravatar.url(email);
 
-  //TODO HW-6 - Create tokken from verification email
-  const newUser = await User.create({ ...req.body, avatarURL });
+  const verificationToken = uuidv4();
+
+  const newUser = await User.create({
+    ...req.body,
+    avatarURL,
+    verificationToken,
+  });
   await newUser.setPassword(password);
-  const token = await newUser.generateToken();
-  res.status(201).json({ token: token });
+
+  // Sent to email verificationToken
+  emailFunction.sendVerificateToken(newUser);
+
+  res.status(201).json({ user: { email, subscription: newUser.subscription } });
 };
 
 const login = async (req, res, next) => {
@@ -31,6 +40,11 @@ const login = async (req, res, next) => {
   if (!user) {
     throw RequestError(401, "Email or password invalid");
   }
+
+  if (!user?.verify) {
+    throw RequestError(401, "Not verification email");
+  }
+
   const passwordIsValid = await user.isValidPassword(password);
 
   if (!passwordIsValid) {
@@ -39,7 +53,6 @@ const login = async (req, res, next) => {
 
   const token = await user.generateToken();
 
-  // res.json({ token, user: { email, subscription: user.subscription } });
   res.json({ token, user: { email, subscription: user.subscription } });
 };
 
@@ -75,6 +88,41 @@ const changeAvatar = async (req, res, next) => {
   res.json({ avatarURL });
 };
 
+const sendValidationToken = async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw RequestError(401, "Email invalid");
+  }
+
+  if (user.verify) {
+    throw RequestError(400, "Verification has already been passed");
+  }
+
+  emailFunction.sendVerificateToken(user);
+
+  res.json({ message: "Verification email sent" });
+};
+
+const verificationEmailToken = async (req, res, next) => {
+  const user = await User.findOne({
+    verificationToken: req.params.verificationToken,
+  });
+
+  if (!user || user.verify) {
+    throw RequestError(404, "User not found");
+  }
+
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
+
+  res.json({ message: "Verification successful" });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
@@ -82,4 +130,6 @@ module.exports = {
   logout: ctrlWrapper(logout),
   changeSubscription: ctrlWrapper(changeSubscription),
   changeAvatar: ctrlWrapper(changeAvatar),
+  sendValidationToken: ctrlWrapper(sendValidationToken),
+  verificationEmailToken: ctrlWrapper(verificationEmailToken),
 };
